@@ -60,7 +60,7 @@ sudo pacman -S base-devel sdl2 mesa
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/bernotieno/system-monitor.git
 cd system-monitor
 ```
 
@@ -241,20 +241,3 @@ system-monitor/
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Dear ImGui**: Excellent immediate mode GUI library
-- **SDL2**: Cross-platform development library
-- **Linux Kernel**: For providing comprehensive /proc and /sys interfaces
-
-## 📞 Support
-
-For issues, questions, or contributions:
-- Open an issue on GitHub
-- Check the troubleshooting section above
-- Review the project documentation
-
----
-
-**Made with ❤️ for the Linux community**
