@@ -32,6 +32,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <map>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <netdb.h>
 
 using namespace std;
 
@@ -72,36 +76,83 @@ struct Networks
     vector<IP4> ip4s;
 };
 
-struct TX
-{
-    int bytes;
-    int packets;
-    int errs;
-    int drop;
-    int fifo;
-    int frame;
-    int compressed;
-    int multicast;
-};
-
 struct RX
 {
-    int bytes;
-    int packets;
-    int errs;
-    int drop;
-    int fifo;
-    int colls;
-    int carrier;
-    int compressed;
+    long long bytes;
+    long long packets;
+    long long errs;
+    long long drop;
+    long long fifo;
+    long long frame;
+    long long compressed;
+    long long multicast;
 };
 
-// student TODO : system stats
+struct TX
+{
+    long long bytes;
+    long long packets;
+    long long errs;
+    long long drop;
+    long long fifo;
+    long long colls;
+    long long carrier;
+    long long compressed;
+};
+
+// System stats functions
 string CPUinfo();
 const char *getOsName();
+string getUsername();
+string getHostname();
+CPUStats getCPUStats();
+double getCPUUsage();
+map<char, int> getProcessCountByState();
 
-// student TODO : memory and processes
+// Memory and processes functions
+struct MemoryInfo {
+    unsigned long totalRAM;
+    unsigned long freeRAM;
+    unsigned long usedRAM;
+    unsigned long totalSwap;
+    unsigned long freeSwap;
+    unsigned long usedSwap;
+};
 
-// student TODO : network
+struct DiskInfo {
+    unsigned long totalDisk;
+    unsigned long freeDisk;
+    unsigned long usedDisk;
+};
+
+MemoryInfo getMemoryInfo();
+DiskInfo getDiskInfo();
+vector<Proc> getProcessList();
+double getProcessCPUUsage(const Proc& proc);
+double getProcessMemoryUsage(const Proc& proc);
+
+// Network functions
+struct NetworkInterface {
+    string name;
+    string ip;
+    RX rx;
+    TX tx;
+};
+
+vector<NetworkInterface> getNetworkInterfaces();
+
+// Thermal and fan functions
+struct ThermalInfo {
+    double temperature;
+    string label;
+};
+
+struct FanInfo {
+    int speed;
+    string label;
+};
+
+vector<ThermalInfo> getThermalInfo();
+vector<FanInfo> getFanInfo();
 
 #endif
