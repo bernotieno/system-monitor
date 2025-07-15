@@ -119,3 +119,43 @@ vector<Proc> getProcessList()
     return processes;
 }
 
+// Calculate CPU usage for a specific process (matches top command calculation)
+double getProcessCPUUsage(const Proc& proc)
+{
+    static map<int, pair<long long, double>> prevTimes;
+
+    long long totalTime = proc.utime + proc.stime;
+
+    // Get system uptime
+    ifstream uptimeFile("/proc/uptime");
+    double uptime;
+    if (uptimeFile >> uptime) {
+        if (prevTimes.find(proc.pid) != prevTimes.end()) {
+            long long timeDiff = totalTime - prevTimes[proc.pid].first;
+            double uptimeDiff = uptime - prevTimes[proc.pid].second;
+
+            if (uptimeDiff > 0) {
+                // Convert clock ticks to seconds and calculate percentage
+                double seconds = timeDiff / (double)sysconf(_SC_CLK_TCK);
+                double cpuUsage = (seconds / uptimeDiff) * 100.0;
+
+                prevTimes[proc.pid] = {totalTime, uptime};
+                return cpuUsage;
+            }
+        }
+
+        prevTimes[proc.pid] = {totalTime, uptime};
+    }
+
+    return 0.0;
+}
+
+// Calculate memory usage percentage for a process
+double getProcessMemoryUsage(const Proc& proc)
+{
+    MemoryInfo memInfo = getMemoryInfo();
+    if (memInfo.totalRAM > 0) {
+        return (double)(proc.rss * getpagesize()) / memInfo.totalRAM * 100.0;
+    }
+    return 0.0;
+}
