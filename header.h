@@ -110,5 +110,26 @@ map<char, int> getProcessCountByState();
 int getTotalTaskCount();
 
 // Memory and processes functions
+struct MemoryInfo {
+    unsigned long totalRAM;
+    unsigned long freeRAM;
+    unsigned long usedRAM;
+    unsigned long totalSwap;
+    unsigned long freeSwap;
+    unsigned long usedSwap;
+};
+
+struct DiskInfo {
+    unsigned long totalDisk;
+    unsigned long freeDisk;
+    unsigned long usedDisk;
+};
+
+MemoryInfo getMemoryInfo();
+DiskInfo getDiskInfo();
+vector<Proc> getProcessList();
+double getProcessCPUUsage(const Proc& proc);
+double getProcessMemoryUsage(const Proc& proc);
+
 
 #endif
