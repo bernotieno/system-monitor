@@ -50,3 +50,18 @@ MemoryInfo getMemoryInfo()
     return memInfo;
 }
 
+// Get disk information using statvfs
+DiskInfo getDiskInfo()
+{
+    DiskInfo diskInfo = {0};
+
+    struct statvfs stat;
+    if (statvfs("/", &stat) == 0) {
+        diskInfo.totalDisk = stat.f_blocks * stat.f_frsize;
+        diskInfo.freeDisk = stat.f_bavail * stat.f_frsize;
+        diskInfo.usedDisk = diskInfo.totalDisk - diskInfo.freeDisk;
+    }
+
+    return diskInfo;
+}
+
