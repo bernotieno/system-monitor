@@ -108,6 +108,7 @@ string getHostname();
 CPUStats getCPUStats();
 double getCPUUsage();
 map<char, int> getProcessCountByState();
+int getTotalTaskCount();
 
 // Memory and processes functions
 struct MemoryInfo {
