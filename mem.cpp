@@ -65,3 +65,57 @@ DiskInfo getDiskInfo()
     return diskInfo;
 }
 
+// Get list of all processes
+vector<Proc> getProcessList()
+{
+    vector<Proc> processes;
+
+    DIR* procDir = opendir("/proc");
+    if (procDir == nullptr) return processes;
+
+    struct dirent* entry;
+    while ((entry = readdir(procDir)) != nullptr) {
+        // Check if directory name is a number (PID)
+        if (strspn(entry->d_name, "0123456789") == strlen(entry->d_name)) {
+            Proc proc = {0};
+            proc.pid = atoi(entry->d_name);
+
+            // Read process name from /proc/PID/comm
+            string commPath = "/proc/" + string(entry->d_name) + "/comm";
+            ifstream commFile(commPath);
+            if (commFile.is_open()) {
+                getline(commFile, proc.name);
+            }
+
+            // Read process stats from /proc/PID/stat
+            string statPath = "/proc/" + string(entry->d_name) + "/stat";
+            ifstream statFile(statPath);
+            string line;
+
+            if (getline(statFile, line)) {
+                // Parse stat file - format is complex, we need specific fields
+                istringstream iss(line);
+                string token;
+                vector<string> tokens;
+
+                while (iss >> token) {
+                    tokens.push_back(token);
+                }
+
+                if (tokens.size() >= 24) {
+                    proc.state = tokens[2][0]; // 3rd field (0-indexed)
+                    proc.vsize = stoll(tokens[22]); // 23rd field
+                    proc.rss = stoll(tokens[23]); // 24th field
+                    proc.utime = stoll(tokens[13]); // 14th field
+                    proc.stime = stoll(tokens[14]); // 15th field
+                }
+            }
+
+            processes.push_back(proc);
+        }
+    }
+
+    closedir(procDir);
+    return processes;
+}
+
