@@ -131,5 +131,15 @@ vector<Proc> getProcessList();
 double getProcessCPUUsage(const Proc& proc);
 double getProcessMemoryUsage(const Proc& proc);
 
+// Network functions
+struct NetworkInterface {
+    string name;
+    string ip;
+    RX rx;
+    TX tx;
+};
+
+vector<NetworkInterface> getNetworkInterfaces();
+
 
 #endif
