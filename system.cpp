@@ -1,33 +1,24 @@
 #include "header.h"
 
-// get cpu id and information, you can use `proc/cpuinfo`
+// get cpu id and information from /proc/cpuinfo
 string CPUinfo()
 {
-    char CPUBrandString[0x40];
-    unsigned int CPUInfo[4] = {0, 0, 0, 0};
+    ifstream file("/proc/cpuinfo");
+    string line;
 
-    // unix system
-    // for windoes maybe we must add the following
-    // __cpuid(regs, 0);
-    // regs is the array of 4 positions
-    __cpuid(0x80000000, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
-    unsigned int nExIds = CPUInfo[0];
-
-    memset(CPUBrandString, 0, sizeof(CPUBrandString));
-
-    for (unsigned int i = 0x80000000; i <= nExIds; ++i)
-    {
-        __cpuid(i, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
-
-        if (i == 0x80000002)
-            memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
-        else if (i == 0x80000003)
-            memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
-        else if (i == 0x80000004)
-            memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+    while (getline(file, line)) {
+        if (line.find("model name") == 0) {
+            size_t colonPos = line.find(':');
+            if (colonPos != string::npos) {
+                string cpuName = line.substr(colonPos + 1);
+                // Remove leading whitespace
+                cpuName.erase(0, cpuName.find_first_not_of(" \t"));
+                return cpuName;
+            }
+        }
     }
-    string str(CPUBrandString);
-    return str;
+
+    return "Unknown CPU";
 }
 
 // getOsName, this will get the OS of the current computer
@@ -164,27 +155,70 @@ map<char, int> getProcessCountByState()
     return stateCounts;
 }
 
-// Get thermal information from /sys/class/thermal
+// Get total task count (matches 'top' command output)
+int getTotalTaskCount()
+{
+    map<char, int> stateCounts = getProcessCountByState();
+    int total = 0;
+
+    // Sum all process states to get total
+    for (const auto& pair : stateCounts) {
+        total += pair.second;
+    }
+
+    return total;
+}
+
+// Get thermal information from /sys/class/thermal and /proc/acpi/ibm/thermal
 vector<ThermalInfo> getThermalInfo()
 {
     vector<ThermalInfo> thermalData;
+    bool foundThermal = false;
 
-    for (int i = 0; i < 10; i++) { // Check up to 10 thermal zones
-        string tempPath = "/sys/class/thermal/thermal_zone" + to_string(i) + "/temp";
-        string typePath = "/sys/class/thermal/thermal_zone" + to_string(i) + "/type";
+    // First try IBM ACPI thermal (ThinkPad specific)
+    ifstream ibmThermalFile("/proc/acpi/ibm/thermal");
+    if (ibmThermalFile.is_open()) {
+        string line;
+        if (getline(ibmThermalFile, line)) {
+            // Format is typically: "temperatures:   42 0 0 0 0 0 0 0"
+            if (line.find("temperatures:") != string::npos) {
+                istringstream iss(line.substr(line.find(":") + 1));
+                int temp;
+                int sensorIndex = 0;
 
-        ifstream tempFile(tempPath);
-        ifstream typeFile(typePath);
+                while (iss >> temp) {
+                    if (temp > 0) { // Only add non-zero temperatures
+                        ThermalInfo info;
+                        info.temperature = temp; // IBM ACPI reports directly in Celsius
+                        info.label = "IBM Sensor " + to_string(sensorIndex);
+                        thermalData.push_back(info);
+                        foundThermal = true;
+                    }
+                    sensorIndex++;
+                }
+            }
+        }
+    }
 
-        if (tempFile.is_open() && typeFile.is_open()) {
-            int tempMilliC;
-            string type;
+    // If no IBM thermal found, try standard thermal zones
+    if (!foundThermal) {
+        for (int i = 0; i < 10; i++) { // Check up to 10 thermal zones
+            string tempPath = "/sys/class/thermal/thermal_zone" + to_string(i) + "/temp";
+            string typePath = "/sys/class/thermal/thermal_zone" + to_string(i) + "/type";
 
-            if (tempFile >> tempMilliC && getline(typeFile, type)) {
-                ThermalInfo info;
-                info.temperature = tempMilliC / 1000.0; // Convert from millicelsius
-                info.label = type;
-                thermalData.push_back(info);
+            ifstream tempFile(tempPath);
+            ifstream typeFile(typePath);
+
+            if (tempFile.is_open() && typeFile.is_open()) {
+                int tempMilliC;
+                string type;
+
+                if (tempFile >> tempMilliC && getline(typeFile, type)) {
+                    ThermalInfo info;
+                    info.temperature = tempMilliC / 1000.0; // Convert from millicelsius
+                    info.label = type;
+                    thermalData.push_back(info);
+                }
             }
         }
     }
