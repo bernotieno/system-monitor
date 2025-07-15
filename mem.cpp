@@ -1,12 +1,15 @@
 #include "header.h"
 
-// Get memory information from /proc/meminfo
+// Get memory information from /proc/meminfo to match 'free -h' command
 MemoryInfo getMemoryInfo()
 {
     MemoryInfo memInfo = {0};
 
     ifstream file("/proc/meminfo");
     string line;
+    unsigned long buffers = 0;
+    unsigned long cached = 0;
+    unsigned long sReclaimable = 0;
 
     while (getline(file, line)) {
         if (line.find("MemTotal:") == 0) {
@@ -25,9 +28,23 @@ MemoryInfo getMemoryInfo()
             sscanf(line.c_str(), "SwapFree: %lu kB", &memInfo.freeSwap);
             memInfo.freeSwap *= 1024;
         }
+        else if (line.find("Buffers:") == 0) {
+            sscanf(line.c_str(), "Buffers: %lu kB", &buffers);
+            buffers *= 1024;
+        }
+        else if (line.find("Cached:") == 0) {
+            sscanf(line.c_str(), "Cached: %lu kB", &cached);
+            cached *= 1024;
+        }
+        else if (line.find("SReclaimable:") == 0) {
+            sscanf(line.c_str(), "SReclaimable: %lu kB", &sReclaimable);
+            sReclaimable *= 1024;
+        }
     }
 
-    memInfo.usedRAM = memInfo.totalRAM - memInfo.freeRAM;
+    // Calculate used memory the same way 'free' command does
+    unsigned long buffCache = buffers + cached + sReclaimable;
+    memInfo.usedRAM = memInfo.totalRAM - memInfo.freeRAM - buffCache;
     memInfo.usedSwap = memInfo.totalSwap - memInfo.freeSwap;
 
     return memInfo;
@@ -102,11 +119,10 @@ vector<Proc> getProcessList()
     return processes;
 }
 
-// Calculate CPU usage for a specific process
+// Calculate CPU usage for a specific process (matches top command calculation)
 double getProcessCPUUsage(const Proc& proc)
 {
-    static map<int, pair<long long, long long>> prevTimes;
-    static map<int, long long> prevSystemTime;
+    static map<int, pair<long long, double>> prevTimes;
 
     long long totalTime = proc.utime + proc.stime;
 
@@ -114,22 +130,21 @@ double getProcessCPUUsage(const Proc& proc)
     ifstream uptimeFile("/proc/uptime");
     double uptime;
     if (uptimeFile >> uptime) {
-        long long systemTime = (long long)(uptime * sysconf(_SC_CLK_TCK));
-
         if (prevTimes.find(proc.pid) != prevTimes.end()) {
             long long timeDiff = totalTime - prevTimes[proc.pid].first;
-            long long systemTimeDiff = systemTime - prevSystemTime[proc.pid];
+            double uptimeDiff = uptime - prevTimes[proc.pid].second;
 
-            if (systemTimeDiff > 0) {
-                double cpuUsage = (double)timeDiff / systemTimeDiff * 100.0;
-                prevTimes[proc.pid] = {totalTime, systemTime};
-                prevSystemTime[proc.pid] = systemTime;
+            if (uptimeDiff > 0) {
+                // Convert clock ticks to seconds and calculate percentage
+                double seconds = timeDiff / (double)sysconf(_SC_CLK_TCK);
+                double cpuUsage = (seconds / uptimeDiff) * 100.0;
+
+                prevTimes[proc.pid] = {totalTime, uptime};
                 return cpuUsage;
             }
         }
 
-        prevTimes[proc.pid] = {totalTime, systemTime};
-        prevSystemTime[proc.pid] = systemTime;
+        prevTimes[proc.pid] = {totalTime, uptime};
     }
 
     return 0.0;
