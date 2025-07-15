@@ -141,5 +141,17 @@ struct NetworkInterface {
 
 vector<NetworkInterface> getNetworkInterfaces();
 
+// Thermal and fan functions
+struct ThermalInfo {
+    double temperature;
+    string label;
+};
 
+struct FanInfo {
+    int speed;
+    string label;
+};
+
+vector<ThermalInfo> getThermalInfo();
+vector<FanInfo> getFanInfo();
 #endif
