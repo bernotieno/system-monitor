@@ -32,6 +32,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <map>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <netdb.h>
 
 using namespace std;
 
@@ -72,36 +76,27 @@ struct Networks
     vector<IP4> ip4s;
 };
 
-struct TX
-{
-    int bytes;
-    int packets;
-    int errs;
-    int drop;
-    int fifo;
-    int frame;
-    int compressed;
-    int multicast;
-};
-
 struct RX
 {
-    int bytes;
-    int packets;
-    int errs;
-    int drop;
-    int fifo;
-    int colls;
-    int carrier;
-    int compressed;
+    long long bytes;
+    long long packets;
+    long long errs;
+    long long drop;
+    long long fifo;
+    long long frame;
+    long long compressed;
+    long long multicast;
 };
-
-// student TODO : system stats
-string CPUinfo();
-const char *getOsName();
-
-// student TODO : memory and processes
-
-// student TODO : network
+struct TX
+{
+    long long bytes;
+    long long packets;
+    long long errs;
+    long long drop;
+    long long fifo;
+    long long colls;
+    long long carrier;
+    long long compressed;
+};
 
 #endif
