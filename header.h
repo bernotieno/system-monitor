@@ -99,4 +99,16 @@ struct TX
     long long compressed;
 };
 
+// System stats functions
+string CPUinfo();
+const char *getOsName();
+string getUsername();
+string getHostname();
+CPUStats getCPUStats();
+double getCPUUsage();
+map<char, int> getProcessCountByState();
+int getTotalTaskCount();
+
+// Memory and processes functions
+
 #endif
