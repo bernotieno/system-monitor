@@ -127,7 +127,7 @@ ls -la monitor
 sudo ./monitor  # For accessing some system files
 ```
 
-## 🎮 Usage Guide
+##  Usage Guide
 
 ### Interface Overview
 
