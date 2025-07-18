@@ -339,7 +339,7 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
             ImGui::Text("%.1f%%", swapUsage * 100.0f);
         }
 
-        // Disk Usage
+        // Disk Usage (Used/Size format)
         DiskInfo diskInfo = getDiskInfo();
         float diskUsage = (float)diskInfo.usedDisk / diskInfo.totalDisk;
         ImGui::Text("Disk: %s / %s",
