@@ -45,12 +45,33 @@ MemoryInfo getMemoryInfo()
 DiskInfo getDiskInfo()
 {
     DiskInfo diskInfo = {0};
+    diskInfo.filesystem = "Unknown";
+
+    // Get filesystem name from /proc/mounts
+    ifstream mountsFile("/proc/mounts");
+    string line;
+    while (getline(mountsFile, line)) {
+        istringstream iss(line);
+        string device, mountpoint, fstype;
+        if (iss >> device >> mountpoint >> fstype) {
+            if (mountpoint == "/") {
+                diskInfo.filesystem = device;
+                break;
+            }
+        }
+    }
 
     struct statvfs stat;
     if (statvfs("/", &stat) == 0) {
+        // Calculate the same way df does:
+        // Total = total blocks * block size
+        // Available = available blocks * block size (f_bavail accounts for reserved space)
+        // Free = free blocks * block size (f_bfree includes reserved space)
+        // Used = Total - Free (using f_bfree, not f_bavail, to match df calculation)
         diskInfo.totalDisk = stat.f_blocks * stat.f_frsize;
-        diskInfo.freeDisk = stat.f_bavail * stat.f_frsize;
-        diskInfo.usedDisk = diskInfo.totalDisk - diskInfo.freeDisk;
+        diskInfo.freeDisk = stat.f_bavail * stat.f_frsize;  // Available to non-root users
+        unsigned long actualFree = stat.f_bfree * stat.f_frsize;  // Total free including reserved
+        diskInfo.usedDisk = diskInfo.totalDisk - actualFree;  // This matches df calculation
     }
 
     return diskInfo;
