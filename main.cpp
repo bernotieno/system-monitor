@@ -48,26 +48,32 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::SetWindowSize(id, size);
     ImGui::SetWindowPos(id, position);
 
-    // Static variables for throttling system info updates
-    static float lastSystemUpdate = 0;
+    // Static variables for throttling updates
+    static float lastStaticUpdate = 0;
+    static float lastTaskUpdate = 0;
     static string cachedOsName = "";
     static string cachedUsername = "";
     static string cachedHostname = "";
     static string cachedCPUinfo = "";
     static map<char, int> cachedProcessStates;
-    static int cachedTotalTasks = 0;
+    static map<string, int> cachedTopStyleCounts;
 
     float currentTime = ImGui::GetTime();
 
-    // Update system info every 5 seconds (static data doesn't change often)
-    if (currentTime - lastSystemUpdate > 5.0f) {
+    // Update static system info only once (or very rarely)
+    if (cachedOsName.empty() || currentTime - lastStaticUpdate > 60.0f) {
         cachedOsName = getOsName();
         cachedUsername = getUsername();
         cachedHostname = getHostname();
         cachedCPUinfo = CPUinfo();
+        lastStaticUpdate = currentTime;
+    }
+
+    // Update task counts every 3 seconds (matches top's default interval)
+    if (currentTime - lastTaskUpdate > 3.0f) {
         cachedProcessStates = getProcessCountByState();
-        cachedTotalTasks = getTotalTaskCount();
-        lastSystemUpdate = currentTime;
+        cachedTopStyleCounts = getTopStyleProcessCounts();
+        lastTaskUpdate = currentTime;
     }
 
     // System Information Section
@@ -78,15 +84,27 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
         ImGui::Text("CPU: %s", cachedCPUinfo.c_str());
         ImGui::Separator();
 
-        // Process count by state
-        ImGui::Text("Tasks: %d total", cachedTotalTasks);
-        ImGui::Indent();
-        ImGui::Text("Running: %d", cachedProcessStates['R']);
-        ImGui::Text("Sleeping: %d", cachedProcessStates['S']);
-        ImGui::Text("Disk Sleep: %d", cachedProcessStates['D']);
-        ImGui::Text("Zombie: %d", cachedProcessStates['Z']);
-        ImGui::Text("Stopped: %d", cachedProcessStates['T']);
-        ImGui::Unindent();
+        // Process count by state (matching 'top' command format)
+        ImGui::Text("Tasks: %d total, %d running, %d sleeping, %d stopped, %d zombie",
+                   cachedTopStyleCounts["total"],
+                   cachedTopStyleCounts["running"],
+                   cachedTopStyleCounts["sleeping"],
+                   cachedTopStyleCounts["stopped"],
+                   cachedTopStyleCounts["zombie"]);
+
+        // Detailed breakdown (for debugging/additional info)
+        if (ImGui::CollapsingHeader("Detailed Process States")) {
+            ImGui::Indent();
+            ImGui::Text("Running (R): %d", cachedProcessStates['R']);
+            ImGui::Text("Sleeping (S): %d", cachedProcessStates['S']);
+            ImGui::Text("Idle (I): %d", cachedProcessStates['I']);
+            ImGui::Text("Disk Sleep (D): %d", cachedProcessStates['D']);
+            ImGui::Text("Zombie (Z): %d", cachedProcessStates['Z']);
+            ImGui::Text("Stopped (T): %d", cachedProcessStates['T']);
+            ImGui::Text("Tracing stop (t): %d", cachedProcessStates['t']);
+            ImGui::Text("Dead (X): %d", cachedProcessStates['X']);
+            ImGui::Unindent();
+        }
     }
 
     // System Monitoring Tabs
@@ -102,8 +120,8 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
 
             float currentTime = ImGui::GetTime();
 
-            // Update CPU data every 1 second (CPU changes rapidly)
-            if (currentTime - lastCPUUpdate > 1.0f) {
+            // Update CPU data every 3 seconds (matches top's default interval)
+            if (currentTime - lastCPUUpdate > 3.0f) {
                 cachedCPU = getCPUUsage();
                 lastCPUUpdate = currentTime;
             }
@@ -146,8 +164,8 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
 
             float currentTime = ImGui::GetTime();
 
-            // Update thermal data every 2 seconds
-            if (currentTime - lastThermalUpdate > 2.0f) {
+            // Update thermal data every 3 seconds (matches top's default interval)
+            if (currentTime - lastThermalUpdate > 3.0f) {
                 cachedThermalInfo = getThermalInfo();
                 lastThermalUpdate = currentTime;
             }
@@ -214,8 +232,8 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
 
             float currentTime = ImGui::GetTime();
 
-            // Update fan data every 2 seconds
-            if (currentTime - lastFanUpdate > 2.0f) {
+            // Update fan data every 3 seconds (matches top's default interval)
+            if (currentTime - lastFanUpdate > 3.0f) {
                 cachedFanInfo = getFanInfo();
                 lastFanUpdate = currentTime;
             }
@@ -346,8 +364,8 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
         static float lastUpdate = 0;
         float currentTime = ImGui::GetTime();
 
-        // Update process list every second
-        if (currentTime - lastUpdate > 1.0f) {
+        // Update process list every 3 seconds (matches top's default interval)
+        if (currentTime - lastUpdate > 3.0f) {
             processes = getProcessList();
             lastUpdate = currentTime;
         }
@@ -447,8 +465,8 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
     static float lastUpdate = 0;
     float currentTime = ImGui::GetTime();
 
-    // Update network data every 2 seconds
-    if (currentTime - lastUpdate > 2.0f) {
+    // Update network data every 3 seconds (matches top's default interval)
+    if (currentTime - lastUpdate > 3.0f) {
         interfaces = getNetworkInterfaces();
         lastUpdate = currentTime;
     }
