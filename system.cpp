@@ -126,6 +126,7 @@ map<char, int> getProcessCountByState()
     stateCounts['T'] = 0; // Stopped
     stateCounts['t'] = 0; // Tracing stop
     stateCounts['X'] = 0; // Dead
+    stateCounts['I'] = 0; // Idle
 
     DIR* procDir = opendir("/proc");
     if (procDir == nullptr) return stateCounts;
@@ -167,6 +168,22 @@ int getTotalTaskCount()
     }
 
     return total;
+}
+
+// Get process counts grouped like 'top' command
+map<string, int> getTopStyleProcessCounts()
+{
+    map<char, int> stateCounts = getProcessCountByState();
+    map<string, int> topCounts;
+
+    topCounts["total"] = getTotalTaskCount();
+    topCounts["running"] = stateCounts['R'];
+    // Top groups S (sleeping), I (idle), and D (disk sleep) as "sleeping"
+    topCounts["sleeping"] = stateCounts['S'] + stateCounts['I'] + stateCounts['D'];
+    topCounts["stopped"] = stateCounts['T'] + stateCounts['t'];
+    topCounts["zombie"] = stateCounts['Z'];
+
+    return topCounts;
 }
 
 // Get thermal information from /sys/class/thermal and /proc/acpi/ibm/thermal
