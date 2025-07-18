@@ -1,15 +1,13 @@
 #include "header.h"
 
-// Get memory information from /proc/meminfo to match 'free -h' command
+// Get memory information from /proc/meminfo to match 'free -h' command exactly
 MemoryInfo getMemoryInfo()
 {
     MemoryInfo memInfo = {0};
 
     ifstream file("/proc/meminfo");
     string line;
-    unsigned long buffers = 0;
-    unsigned long cached = 0;
-    unsigned long sReclaimable = 0;
+    unsigned long memAvailable = 0;
 
     while (getline(file, line)) {
         if (line.find("MemTotal:") == 0) {
@@ -20,6 +18,10 @@ MemoryInfo getMemoryInfo()
             sscanf(line.c_str(), "MemFree: %lu kB", &memInfo.freeRAM);
             memInfo.freeRAM *= 1024;
         }
+        else if (line.find("MemAvailable:") == 0) {
+            sscanf(line.c_str(), "MemAvailable: %lu kB", &memAvailable);
+            memAvailable *= 1024;
+        }
         else if (line.find("SwapTotal:") == 0) {
             sscanf(line.c_str(), "SwapTotal: %lu kB", &memInfo.totalSwap);
             memInfo.totalSwap *= 1024;
@@ -28,23 +30,12 @@ MemoryInfo getMemoryInfo()
             sscanf(line.c_str(), "SwapFree: %lu kB", &memInfo.freeSwap);
             memInfo.freeSwap *= 1024;
         }
-        else if (line.find("Buffers:") == 0) {
-            sscanf(line.c_str(), "Buffers: %lu kB", &buffers);
-            buffers *= 1024;
-        }
-        else if (line.find("Cached:") == 0) {
-            sscanf(line.c_str(), "Cached: %lu kB", &cached);
-            cached *= 1024;
-        }
-        else if (line.find("SReclaimable:") == 0) {
-            sscanf(line.c_str(), "SReclaimable: %lu kB", &sReclaimable);
-            sReclaimable *= 1024;
-        }
     }
 
-    // Calculate used memory the same way 'free' command does
-    unsigned long buffCache = buffers + cached + sReclaimable;
-    memInfo.usedRAM = memInfo.totalRAM - memInfo.freeRAM - buffCache;
+    // Calculate used memory exactly the same way modern 'free' command does:
+    // Used = MemTotal - MemAvailable
+    // This matches the 'free -h' output perfectly
+    memInfo.usedRAM = memInfo.totalRAM - memAvailable;
     memInfo.usedSwap = memInfo.totalSwap - memInfo.freeSwap;
 
     return memInfo;
