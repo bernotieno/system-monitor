@@ -124,6 +124,7 @@ struct DiskInfo {
     unsigned long totalDisk;
     unsigned long freeDisk;
     unsigned long usedDisk;
+    string filesystem;
 };
 
 MemoryInfo getMemoryInfo();
