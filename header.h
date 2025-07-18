@@ -108,6 +108,7 @@ CPUStats getCPUStats();
 double getCPUUsage();
 map<char, int> getProcessCountByState();
 int getTotalTaskCount();
+map<string, int> getTopStyleProcessCounts();
 
 // Memory and processes functions
 struct MemoryInfo {
