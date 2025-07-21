@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <chrono>
 // lib to read from file
 #include <fstream>
 // for the name of the computer and the logged in user
@@ -132,6 +133,7 @@ DiskInfo getDiskInfo();
 vector<Proc> getProcessList();
 double getProcessCPUUsage(const Proc& proc);
 double getProcessMemoryUsage(const Proc& proc);
+char getCurrentProcessState(int pid);
 
 // Network functions
 struct NetworkInterface {
