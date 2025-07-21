@@ -69,7 +69,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
         lastStaticUpdate = currentTime;
     }
 
-    // Update task counts every 3 seconds (matches top's default interval)
+    // Update task counts every 3 seconds (matches top's default refresh rate)
     if (currentTime - lastTaskUpdate > 3.0f) {
         cachedProcessStates = getProcessCountByState();
         cachedTopStyleCounts = getTopStyleProcessCounts();
@@ -120,7 +120,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
 
             float currentTime = ImGui::GetTime();
 
-            // Update CPU data every 3 seconds (matches top's default interval)
+            // Update CPU data every 3 seconds (matches top's default refresh rate)
             if (currentTime - lastCPUUpdate > 3.0f) {
                 cachedCPU = getCPUUsage();
                 lastCPUUpdate = currentTime;
@@ -364,7 +364,7 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
         static float lastUpdate = 0;
         float currentTime = ImGui::GetTime();
 
-        // Update process list every 3 seconds (matches top's default interval)
+        // Update process list every 3 seconds (matches top's default refresh rate)
         if (currentTime - lastUpdate > 3.0f) {
             processes = getProcessList();
             lastUpdate = currentTime;
@@ -431,7 +431,9 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
                 ImGui::Text("%s", proc.name.c_str());
 
                 ImGui::TableSetColumnIndex(2);
-                ImGui::Text("%c", proc.state);
+                // Read process state fresh every time (like top does)
+                char currentState = getCurrentProcessState(proc.pid);
+                ImGui::Text("%c", currentState);
 
                 ImGui::TableSetColumnIndex(3);
                 double cpuUsage = getProcessCPUUsage(proc);
