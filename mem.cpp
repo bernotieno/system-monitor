@@ -106,6 +106,7 @@ vector<Proc> getProcessList()
 
             if (getline(statFile, line)) {
                 // Parse stat file - format is complex, we need specific fields
+                // The stat file format: pid (comm) state ppid pgrp session tty_nr tpgid flags minflt cminflt majflt cmajflt utime stime cutime cstime priority nice num_threads itrealvalue starttime vsize rss rsslim...
                 istringstream iss(line);
                 string token;
                 vector<string> tokens;
@@ -115,11 +116,23 @@ vector<Proc> getProcessList()
                 }
 
                 if (tokens.size() >= 24) {
-                    proc.state = tokens[2][0]; // 3rd field (0-indexed)
-                    proc.vsize = stoll(tokens[22]); // 23rd field
-                    proc.rss = stoll(tokens[23]); // 24th field
-                    proc.utime = stoll(tokens[13]); // 14th field
-                    proc.stime = stoll(tokens[14]); // 15th field
+                    // Ensure we have a valid state character
+                    if (!tokens[2].empty()) {
+                        proc.state = tokens[2][0]; // 3rd field (0-indexed) - process state
+                    } else {
+                        proc.state = '?'; // Unknown state if empty
+                    }
+                    proc.vsize = stoll(tokens[22]); // 23rd field - virtual memory size
+                    proc.rss = stoll(tokens[23]); // 24th field - resident set size
+                    proc.utime = stoll(tokens[13]); // 14th field - user time
+                    proc.stime = stoll(tokens[14]); // 15th field - system time
+                } else {
+                    // If we don't have enough fields, set default values
+                    proc.state = '?';
+                    proc.vsize = 0;
+                    proc.rss = 0;
+                    proc.utime = 0;
+                    proc.stime = 0;
                 }
             }
 
@@ -131,35 +144,87 @@ vector<Proc> getProcessList()
     return processes;
 }
 
-// Calculate CPU usage for a specific process (matches top command calculation)
+// Calculate CPU usage for a specific process (matches top command calculation exactly)
 double getProcessCPUUsage(const Proc& proc)
 {
     static map<int, pair<long long, double>> prevTimes;
+    static map<int, double> cachedCPUUsage; // Cache CPU usage values
+    static map<int, double> lastCalculationTime; // Track when we last calculated for each process
 
     long long totalTime = proc.utime + proc.stime;
+
+    // Get current time
+    static auto start = chrono::steady_clock::now();
+    auto now = chrono::steady_clock::now();
+    double currentTime = chrono::duration<double>(now - start).count();
 
     // Get system uptime
     ifstream uptimeFile("/proc/uptime");
     double uptime;
-    if (uptimeFile >> uptime) {
-        if (prevTimes.find(proc.pid) != prevTimes.end()) {
-            long long timeDiff = totalTime - prevTimes[proc.pid].first;
-            double uptimeDiff = uptime - prevTimes[proc.pid].second;
-
-            if (uptimeDiff > 0) {
-                // Convert clock ticks to seconds and calculate percentage
-                double seconds = timeDiff / (double)sysconf(_SC_CLK_TCK);
-                double cpuUsage = (seconds / uptimeDiff) * 100.0;
-
-                prevTimes[proc.pid] = {totalTime, uptime};
-                return cpuUsage;
-            }
-        }
-
-        prevTimes[proc.pid] = {totalTime, uptime};
+    if (!uptimeFile || !(uptimeFile >> uptime)) {
+        return 0.0;
     }
 
+    // Check if we have previous data for this process
+    if (prevTimes.find(proc.pid) != prevTimes.end()) {
+        long long timeDiff = totalTime - prevTimes[proc.pid].first;
+        double uptimeDiff = uptime - prevTimes[proc.pid].second;
+
+        // Only calculate if we have a meaningful time difference (at least 2.5 seconds to match top's 3-second interval)
+        if (uptimeDiff >= 2.5) {
+            // Convert clock ticks to seconds and calculate percentage
+            // This matches top's calculation: CPU% = (process_time_diff / real_time_diff) * 100
+            double seconds = timeDiff / (double)sysconf(_SC_CLK_TCK);
+            double cpuUsage = (seconds / uptimeDiff) * 100.0;
+
+            // Clamp CPU usage to reasonable range (0-100%)
+            cpuUsage = max(0.0, min(100.0, cpuUsage));
+
+            // Update previous times and cache the result
+            prevTimes[proc.pid] = {totalTime, uptime};
+            cachedCPUUsage[proc.pid] = cpuUsage;
+            lastCalculationTime[proc.pid] = currentTime;
+
+            return cpuUsage;
+        } else {
+            // Time difference too small, return cached value if available
+            if (cachedCPUUsage.find(proc.pid) != cachedCPUUsage.end()) {
+                return cachedCPUUsage[proc.pid];
+            }
+        }
+    }
+
+    // First time seeing this process or no previous data, store initial values
+    prevTimes[proc.pid] = {totalTime, uptime};
+    cachedCPUUsage[proc.pid] = 0.0;
+    lastCalculationTime[proc.pid] = currentTime;
+
     return 0.0;
+}
+
+// Get current process state in real-time (like top does)
+char getCurrentProcessState(int pid)
+{
+    string statPath = "/proc/" + to_string(pid) + "/stat";
+    ifstream statFile(statPath);
+    string line;
+
+    if (getline(statFile, line)) {
+        // Parse stat file to get the state (3rd field)
+        istringstream iss(line);
+        string token;
+        vector<string> tokens;
+
+        while (iss >> token) {
+            tokens.push_back(token);
+        }
+
+        if (tokens.size() >= 3 && !tokens[2].empty()) {
+            return tokens[2][0]; // 3rd field (0-indexed) - process state
+        }
+    }
+
+    return '?'; // Unknown state if we can't read it
 }
 
 // Calculate memory usage percentage for a process
