@@ -77,7 +77,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     }
 
     // System Information Section
-    if (ImGui::CollapsingHeader(">> System Information", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("System Information", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Create a nice info box
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.18f, 0.20f, 0.22f, 1.00f));
         ImGui::BeginChild("SystemInfoBox", ImVec2(0, 120), true);
@@ -108,7 +108,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
         ImGui::Spacing();
 
         // Task Overview - detailed process states
-        if (ImGui::CollapsingHeader(">> Task Overview")) {
+        if (ImGui::CollapsingHeader("Task Overview")) {
             ImGui::Indent();
 
             // Display the same statistics as Tasks Overview but in detailed format
@@ -139,7 +139,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     // System Monitoring Tabs
     if (ImGui::BeginTabBar("SystemMonitoringTabs")) {
         // CPU Tab
-        if (ImGui::BeginTabItem(">> CPU")) {
+        if (ImGui::BeginTabItem("CPU")) {
             static vector<float> cpuHistory;
             static bool animate = true;
             static float fps = 60.0f;
@@ -190,7 +190,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
             ImGui::Spacing();
 
             // Control panel
-            ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), ">> Controls:");
+            ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), "Controls:");
             ImGui::Separator();
 
             ImGui::Checkbox("Animate", &animate);
@@ -199,7 +199,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
             ImGui::SliderFloat("Y-Scale", &yScale, 50.0f, 200.0f);
 
             ImGui::Spacing();
-            ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), ">> CPU History:");
+            ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), "CPU History:");
             ImGui::Separator();
 
             // Enhanced CPU usage graph
@@ -212,7 +212,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
         }
 
         // Thermal Tab
-        if (ImGui::BeginTabItem(">> Thermal")) {
+        if (ImGui::BeginTabItem("Thermal")) {
             static vector<vector<float>> thermalHistory;
             static bool animate = true;
             static float fps = 60.0f;
@@ -254,7 +254,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
             if (cachedThermalInfo.empty()) {
                 ImGui::TextColored(ImVec4(1.00f, 1.00f, 0.00f, 1.00f), "WARNING: No thermal sensors found");
             } else {
-                ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), ">> Temperature Sensors:");
+                ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), "Temperature Sensors:");
                 ImGui::Separator();
 
                 for (size_t i = 0; i < cachedThermalInfo.size(); i++) {
@@ -310,7 +310,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
         }
 
         // Fan Tab
-        if (ImGui::BeginTabItem(">> Fan")) {
+        if (ImGui::BeginTabItem("Fan")) {
             static vector<vector<float>> fanHistory;
             static bool animate = true;
             static float fps = 60.0f;
@@ -388,7 +388,7 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::SetWindowPos(id, position);
 
     // Memory Usage Section
-    if (ImGui::CollapsingHeader(">> Memory Usage", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Memory Usage", ImGuiTreeNodeFlags_DefaultOpen)) {
         MemoryInfo memInfo = getMemoryInfo();
 
         // Helper function to format bytes with appropriate units
@@ -469,7 +469,7 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     }
 
     // Process Monitor Section
-    if (ImGui::CollapsingHeader(">> Process Monitor", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Process Monitor", ImGuiTreeNodeFlags_DefaultOpen)) {
         static char filter[256] = "";
         static vector<int> selectedProcesses;
 
@@ -616,7 +616,7 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
     };
 
     // Network Interface Information
-    if (ImGui::CollapsingHeader(">> Network Interfaces", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Network Interfaces", ImGuiTreeNodeFlags_DefaultOpen)) {
         for (const auto& iface : interfaces) {
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.18f, 0.20f, 0.22f, 1.00f));
             ImGui::BeginChild(("Interface" + iface.name).c_str(), ImVec2(0, 60), true);
@@ -639,7 +639,7 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
     // Network Usage Tabs
     if (ImGui::BeginTabBar("NetworkUsageTabs")) {
         // RX (Receive) Tab
-        if (ImGui::BeginTabItem(">> RX (Receive)")) {
+        if (ImGui::BeginTabItem("RX (Receive)")) {
             static map<string, vector<float>> rxHistory;
 
             for (const auto& iface : interfaces) {
@@ -700,7 +700,7 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
         }
 
         // TX (Transmit) Tab
-        if (ImGui::BeginTabItem(">> TX (Transmit)")) {
+        if (ImGui::BeginTabItem("TX (Transmit)")) {
             static map<string, vector<float>> txHistory;
 
             for (const auto& iface : interfaces) {
