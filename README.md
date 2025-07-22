@@ -66,7 +66,7 @@ cd system-monitor
 
 ### 2. Build the Application
 ```bash
-make clean && make
+make && make clean
 ```
 
 ### 3. Run the System Monitor
