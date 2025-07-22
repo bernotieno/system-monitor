@@ -556,7 +556,32 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
                 ImGui::Text("%c", currentState);
 
                 ImGui::TableSetColumnIndex(3);
-                double cpuUsage = getProcessCPUUsage(proc);
+                // Async CPU usage calculation
+                static map<int, future<float>> cpuFutures;
+                static map<int, float> cachedCPUUsage;
+
+                float cpuUsage = 0.0f;
+                if (cpuFutures.find(proc.pid) == cpuFutures.end() || 
+                    cpuFutures[proc.pid].wait_for(chrono::seconds(0)) == future_status::ready) {
+                    
+                    // Get result if ready
+                    if (cpuFutures.find(proc.pid) != cpuFutures.end() && 
+                        cpuFutures[proc.pid].wait_for(chrono::seconds(0)) == future_status::ready) {
+                        cachedCPUUsage[proc.pid] = cpuFutures[proc.pid].get();
+                    }
+                    
+                    // Start new async calculation
+                    cpuFutures[proc.pid] = async(launch::async, GetCPUUsage, proc.pid);
+                    
+                    // Use cached value or 0
+                    cpuUsage = cachedCPUUsage.find(proc.pid) != cachedCPUUsage.end() ? 
+                            cachedCPUUsage[proc.pid] : 0.0f;
+                } else {
+                    // Use cached value while calculation is running
+                    cpuUsage = cachedCPUUsage.find(proc.pid) != cachedCPUUsage.end() ? 
+                            cachedCPUUsage[proc.pid] : 0.0f;
+                }
+
                 ImGui::Text("%.1f", cpuUsage);
 
                 ImGui::TableSetColumnIndex(4);
