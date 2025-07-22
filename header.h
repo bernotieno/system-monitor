@@ -158,4 +158,10 @@ struct FanInfo {
 
 vector<ThermalInfo> getThermalInfo();
 vector<FanInfo> getFanInfo();
+
+// UI Enhancement functions
+void setupEnhancedStyle();
+void drawSectionHeader(const char* icon, const char* title, ImVec4 color);
+void drawInfoCard(const char* label, const char* value, ImVec4 labelColor);
+
 #endif
