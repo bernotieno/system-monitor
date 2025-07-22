@@ -77,20 +77,77 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     }
 
     // System Information Section
-    if (ImGui::CollapsingHeader("System Information", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Text("OS: %s", cachedOsName.c_str());
-        ImGui::Text("Username: %s", cachedUsername.c_str());
-        ImGui::Text("Hostname: %s", cachedHostname.c_str());
-        ImGui::Text("CPU: %s", cachedCPUinfo.c_str());
+    if (ImGui::CollapsingHeader(">> System Information", ImGuiTreeNodeFlags_DefaultOpen)) {
+        // Create a nice info box
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.18f, 0.20f, 0.22f, 1.00f));
+        ImGui::BeginChild("SystemInfoBox", ImVec2(0, 120), true);
+
+        // OS Information with icon
+        ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "OS:");
+        ImGui::SameLine(80);
+        ImGui::Text("%s", cachedOsName.c_str());
+
+        // User Information with icon
+        ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "User:");
+        ImGui::SameLine(80);
+        ImGui::Text("%s", cachedUsername.c_str());
+
+        // Hostname with icon
+        ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "Host:");
+        ImGui::SameLine(80);
+        ImGui::Text("%s", cachedHostname.c_str());
+
+        // CPU Information with icon
+        ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "CPU:");
+        ImGui::SameLine(80);
+        ImGui::TextWrapped("%s", cachedCPUinfo.c_str());
+
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+
+        ImGui::Spacing();
+
+        // Enhanced Process count display
+        ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), ">> Tasks Overview:");
         ImGui::Separator();
 
-        // Process count by state (matching 'top' command format)
-        ImGui::Text("Tasks: %d total, %d running, %d sleeping, %d stopped, %d zombie",
-                   cachedTopStyleCounts["total"],
-                   cachedTopStyleCounts["running"],
-                   cachedTopStyleCounts["sleeping"],
-                   cachedTopStyleCounts["stopped"],
-                   cachedTopStyleCounts["zombie"]);
+        // Create a grid layout for process counts
+        ImGui::Columns(3, "ProcessCounts", false);
+
+        // Total tasks
+        ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "Total:");
+        ImGui::SameLine();
+        ImGui::Text("%d", cachedTopStyleCounts["total"]);
+
+        ImGui::NextColumn();
+
+        // Running tasks
+        ImGui::TextColored(ImVec4(0.00f, 1.00f, 0.00f, 1.00f), "Running:");
+        ImGui::SameLine();
+        ImGui::Text("%d", cachedTopStyleCounts["running"]);
+
+        ImGui::NextColumn();
+
+        // Sleeping tasks
+        ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), "Sleeping:");
+        ImGui::SameLine();
+        ImGui::Text("%d", cachedTopStyleCounts["sleeping"]);
+
+        ImGui::NextColumn();
+
+        // Stopped tasks
+        ImGui::TextColored(ImVec4(1.00f, 0.60f, 0.00f, 1.00f), "Stopped:");
+        ImGui::SameLine();
+        ImGui::Text("%d", cachedTopStyleCounts["stopped"]);
+
+        ImGui::NextColumn();
+
+        // Zombie tasks
+        ImGui::TextColored(ImVec4(1.00f, 0.00f, 0.00f, 1.00f), "Zombie:");
+        ImGui::SameLine();
+        ImGui::Text("%d", cachedTopStyleCounts["zombie"]);
+
+        ImGui::Columns(1);
 
         // Detailed breakdown (for debugging/additional info)
         if (ImGui::CollapsingHeader("Detailed Process States")) {
@@ -110,7 +167,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
     // System Monitoring Tabs
     if (ImGui::BeginTabBar("SystemMonitoringTabs")) {
         // CPU Tab
-        if (ImGui::BeginTabItem("CPU")) {
+        if (ImGui::BeginTabItem(">> CPU")) {
             static vector<float> cpuHistory;
             static bool animate = true;
             static float fps = 60.0f;
@@ -136,25 +193,54 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
                 }
             }
 
+            // Enhanced CPU usage display
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.18f, 0.20f, 0.22f, 1.00f));
+            ImGui::BeginChild("CPUUsageBox", ImVec2(0, 80), true);
+
+            // Large CPU percentage display
+            ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("CPU Usage").x) * 0.5f);
+            ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "CPU Usage");
+
+            // Color-coded CPU percentage
+            ImVec4 cpuColor = ImVec4(0.00f, 1.00f, 0.00f, 1.00f); // Green
+            if (cachedCPU > 50) cpuColor = ImVec4(1.00f, 1.00f, 0.00f, 1.00f); // Yellow
+            if (cachedCPU > 80) cpuColor = ImVec4(1.00f, 0.00f, 0.00f, 1.00f); // Red
+
+            ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("100.0%").x) * 0.5f);
+            ImGui::TextColored(cpuColor, "%.1f%%", cachedCPU);
+
+            // CPU usage progress bar
+            ImGui::ProgressBar((float)cachedCPU / 100.0f, ImVec2(-1, 0), "");
+
+            ImGui::EndChild();
+            ImGui::PopStyleColor();
+
+            ImGui::Spacing();
+
+            // Control panel
+            ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), ">> Controls:");
+            ImGui::Separator();
+
             ImGui::Checkbox("Animate", &animate);
             ImGui::SameLine();
             ImGui::SliderFloat("FPS", &fps, 1.0f, 120.0f);
             ImGui::SliderFloat("Y-Scale", &yScale, 50.0f, 200.0f);
 
-            // CPU percentage overlay
-            ImGui::Text("CPU Usage: %.1f%%", cachedCPU);
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), ">> CPU History:");
+            ImGui::Separator();
 
-            // Plot CPU usage graph
+            // Enhanced CPU usage graph
             if (!cpuHistory.empty()) {
-                ImGui::PlotLines("CPU %", cpuHistory.data(), cpuHistory.size(),
-                               0, nullptr, 0.0f, yScale, ImVec2(0, 80));
+                ImGui::PlotLines("", cpuHistory.data(), cpuHistory.size(),
+                               0, nullptr, 0.0f, yScale, ImVec2(0, 120));
             }
 
             ImGui::EndTabItem();
         }
 
         // Thermal Tab
-        if (ImGui::BeginTabItem("Thermal")) {
+        if (ImGui::BeginTabItem(">> Thermal")) {
             static vector<vector<float>> thermalHistory;
             static bool animate = true;
             static float fps = 60.0f;
@@ -194,27 +280,57 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
             ImGui::SliderFloat("Y-Scale", &yScale, 50.0f, 200.0f);
 
             if (cachedThermalInfo.empty()) {
-                ImGui::Text("No thermal sensors found");
+                ImGui::TextColored(ImVec4(1.00f, 1.00f, 0.00f, 1.00f), "WARNING: No thermal sensors found");
             } else {
+                ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), ">> Temperature Sensors:");
+                ImGui::Separator();
+
                 for (size_t i = 0; i < cachedThermalInfo.size(); i++) {
                     const auto& thermal = cachedThermalInfo[i];
-                    ImGui::Text("%s: %.1f°C", thermal.label.c_str(), thermal.temperature);
 
-                    // Temperature overlay with color coding
-                    ImVec4 color = ImVec4(0, 1, 0, 1); // Green
-                    if (thermal.temperature > 70) color = ImVec4(1, 1, 0, 1); // Yellow
-                    if (thermal.temperature > 85) color = ImVec4(1, 0, 0, 1); // Red
+                    // Create a nice sensor box
+                    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.18f, 0.20f, 0.22f, 1.00f));
+                    ImGui::BeginChild(("ThermalSensor" + to_string(i)).c_str(), ImVec2(0, 120), true);
 
+                    // Sensor name
+                    ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "SENSOR: %s", thermal.label.c_str());
+
+                    // Temperature with color coding and status
+                    ImVec4 color = ImVec4(0.00f, 1.00f, 0.00f, 1.00f); // Green - Cool
+                    string status = "COOL";
+                    if (thermal.temperature > 50) {
+                        color = ImVec4(0.90f, 0.70f, 0.00f, 1.00f); // Yellow - Warm
+                        status = "WARM";
+                    }
+                    if (thermal.temperature > 70) {
+                        color = ImVec4(1.00f, 1.00f, 0.00f, 1.00f); // Orange - Hot
+                        status = "HOT";
+                    }
+                    if (thermal.temperature > 85) {
+                        color = ImVec4(1.00f, 0.00f, 0.00f, 1.00f); // Red - Critical
+                        status = "CRITICAL";
+                    }
+
+                    ImGui::TextColored(color, "%.1f°C", thermal.temperature);
                     ImGui::SameLine();
-                    ImGui::TextColored(color, "[%.1f°C]", thermal.temperature);
+                    ImGui::TextColored(color, "[%s]", status.c_str());
+
+                    // Temperature progress bar
+                    float tempProgress = min((float)thermal.temperature / 100.0f, 1.0f);
+                    ImGui::ProgressBar(tempProgress, ImVec2(-1, 0), "");
+
+                    ImGui::EndChild();
+                    ImGui::PopStyleColor();
 
                     // Plot thermal history
                     if (!thermalHistory[i].empty()) {
-                        ImGui::PlotLines(("Temp " + thermal.label).c_str(),
+                        ImGui::PlotLines(("History: " + thermal.label).c_str(),
                                        thermalHistory[i].data(),
                                        thermalHistory[i].size(),
                                        0, nullptr, 0.0f, yScale, ImVec2(0, 80));
                     }
+
+                    ImGui::Spacing();
                 }
             }
 
@@ -222,7 +338,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
         }
 
         // Fan Tab
-        if (ImGui::BeginTabItem("Fan")) {
+        if (ImGui::BeginTabItem(">> Fan")) {
             static vector<vector<float>> fanHistory;
             static bool animate = true;
             static float fps = 60.0f;
@@ -300,7 +416,7 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::SetWindowPos(id, position);
 
     // Memory Usage Section
-    if (ImGui::CollapsingHeader("Memory Usage", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader(">> Memory Usage", ImGuiTreeNodeFlags_DefaultOpen)) {
         MemoryInfo memInfo = getMemoryInfo();
 
         // Helper function to format bytes with appropriate units
@@ -319,24 +435,54 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
             return string(buffer);
         };
 
-        // RAM Usage
+        // Enhanced RAM Usage Display
         float ramUsage = (float)memInfo.usedRAM / memInfo.totalRAM;
-        ImGui::Text("RAM: %s / %s",
-                   formatBytes(memInfo.usedRAM).c_str(),
-                   formatBytes(memInfo.totalRAM).c_str());
-        ImGui::ProgressBar(ramUsage, ImVec2(-1, 0), "");
-        ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-        ImGui::Text("%.1f%%", ramUsage * 100.0f);
 
-        // SWAP Usage
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.18f, 0.20f, 0.22f, 1.00f));
+        ImGui::BeginChild("RAMUsageBox", ImVec2(0, 80), true);
+
+        ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "RAM Usage");
+        ImGui::Text("%s / %s", formatBytes(memInfo.usedRAM).c_str(), formatBytes(memInfo.totalRAM).c_str());
+
+        // Color-coded progress bar
+        ImVec4 ramColor = ImVec4(0.00f, 1.00f, 0.00f, 1.00f); // Green
+        if (ramUsage > 0.7f) ramColor = ImVec4(1.00f, 1.00f, 0.00f, 1.00f); // Yellow
+        if (ramUsage > 0.9f) ramColor = ImVec4(1.00f, 0.00f, 0.00f, 1.00f); // Red
+
+        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ramColor);
+        ImGui::ProgressBar(ramUsage, ImVec2(-1, 0), "");
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+        ImGui::TextColored(ramColor, "%.1f%%", ramUsage * 100.0f);
+
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+
+        // Enhanced SWAP Usage Display
         if (memInfo.totalSwap > 0) {
             float swapUsage = (float)memInfo.usedSwap / memInfo.totalSwap;
-            ImGui::Text("SWAP: %s / %s",
-                       formatBytes(memInfo.usedSwap).c_str(),
-                       formatBytes(memInfo.totalSwap).c_str());
+
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.18f, 0.20f, 0.22f, 1.00f));
+            ImGui::BeginChild("SWAPUsageBox", ImVec2(0, 80), true);
+
+            ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "SWAP Usage");
+            ImGui::Text("%s / %s", formatBytes(memInfo.usedSwap).c_str(), formatBytes(memInfo.totalSwap).c_str());
+
+            // Color-coded progress bar
+            ImVec4 swapColor = ImVec4(0.00f, 1.00f, 0.00f, 1.00f); // Green
+            if (swapUsage > 0.5f) swapColor = ImVec4(1.00f, 1.00f, 0.00f, 1.00f); // Yellow
+            if (swapUsage > 0.8f) swapColor = ImVec4(1.00f, 0.00f, 0.00f, 1.00f); // Red
+
+            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, swapColor);
             ImGui::ProgressBar(swapUsage, ImVec2(-1, 0), "");
+            ImGui::PopStyleColor();
+
             ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-            ImGui::Text("%.1f%%", swapUsage * 100.0f);
+            ImGui::TextColored(swapColor, "%.1f%%", swapUsage * 100.0f);
+
+            ImGui::EndChild();
+            ImGui::PopStyleColor();
         }
 
         // Disk Usage (Used/Size format)
@@ -351,13 +497,15 @@ void memoryProcessesWindow(const char *id, ImVec2 size, ImVec2 position)
     }
 
     // Process Monitor Section
-    if (ImGui::CollapsingHeader("Process Monitor", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader(">> Process Monitor", ImGuiTreeNodeFlags_DefaultOpen)) {
         static char filter[256] = "";
         static vector<int> selectedProcesses;
 
-        ImGui::Text("Filter:");
+        ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "Filter:");
         ImGui::SameLine();
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.25f, 0.25f, 0.25f, 1.00f));
         ImGui::InputText("##filter", filter, sizeof(filter));
+        ImGui::PopStyleColor();
 
         // Get process list
         static vector<Proc> processes;
@@ -496,20 +644,30 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
     };
 
     // Network Interface Information
-    if (ImGui::CollapsingHeader("Network Interfaces", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader(">> Network Interfaces", ImGuiTreeNodeFlags_DefaultOpen)) {
         for (const auto& iface : interfaces) {
-            ImGui::Text("Interface: %s", iface.name.c_str());
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.18f, 0.20f, 0.22f, 1.00f));
+            ImGui::BeginChild(("Interface" + iface.name).c_str(), ImVec2(0, 60), true);
+
+            ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "Interface:");
+            ImGui::SameLine();
+            ImGui::Text("%s", iface.name.c_str());
+
             if (!iface.ip.empty()) {
-                ImGui::Text("IP Address: %s", iface.ip.c_str());
+                ImGui::TextColored(ImVec4(0.00f, 1.00f, 0.00f, 1.00f), "IP Address:");
+                ImGui::SameLine();
+                ImGui::Text("%s", iface.ip.c_str());
             }
-            ImGui::Separator();
+
+            ImGui::EndChild();
+            ImGui::PopStyleColor();
         }
     }
 
     // Network Usage Tabs
     if (ImGui::BeginTabBar("NetworkUsageTabs")) {
         // RX (Receive) Tab
-        if (ImGui::BeginTabItem("RX (Receive)")) {
+        if (ImGui::BeginTabItem(">> RX (Receive)")) {
             static map<string, vector<float>> rxHistory;
 
             for (const auto& iface : interfaces) {
@@ -570,7 +728,7 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
         }
 
         // TX (Transmit) Tab
-        if (ImGui::BeginTabItem("TX (Transmit)")) {
+        if (ImGui::BeginTabItem(">> TX (Transmit)")) {
             static map<string, vector<float>> txHistory;
 
             for (const auto& iface : interfaces) {
@@ -636,6 +794,109 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
     ImGui::End();
 }
 
+// Helper function to draw a nice header with icon
+void drawSectionHeader(const char* icon, const char* title, ImVec4 color = ImVec4(0.90f, 0.70f, 0.00f, 1.00f))
+{
+    ImGui::PushStyleColor(ImGuiCol_Text, color);
+    ImGui::Text("%s %s", icon, title);
+    ImGui::PopStyleColor();
+    ImGui::Separator();
+}
+
+// Helper function to draw an info card
+void drawInfoCard(const char* label, const char* value, ImVec4 labelColor = ImVec4(0.11f, 0.64f, 0.92f, 1.00f))
+{
+    ImGui::TextColored(labelColor, "%s", label);
+    ImGui::SameLine(100);
+    ImGui::Text("%s", value);
+}
+
+// Enhanced styling function for modern UI appearance
+void setupEnhancedStyle()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4* colors = style.Colors;
+
+    // Modern color scheme - Dark theme with accent colors
+    colors[ImGuiCol_Text]                   = ImVec4(0.95f, 0.95f, 0.95f, 1.00f);
+    colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+    colors[ImGuiCol_WindowBg]               = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
+    colors[ImGuiCol_ChildBg]                = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
+    colors[ImGuiCol_PopupBg]                = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
+    colors[ImGuiCol_Border]                 = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
+    colors[ImGuiCol_BorderShadow]           = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+    colors[ImGuiCol_FrameBg]                = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+    colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
+    colors[ImGuiCol_FrameBgActive]          = ImVec4(0.67f, 0.67f, 0.67f, 0.39f);
+    colors[ImGuiCol_TitleBg]                = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
+    colors[ImGuiCol_TitleBgActive]          = ImVec4(0.08f, 0.08f, 0.09f, 1.00f);
+    colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+    colors[ImGuiCol_MenuBarBg]              = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+    colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
+    colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
+    colors[ImGuiCol_CheckMark]              = ImVec4(0.11f, 0.64f, 0.92f, 1.00f);
+    colors[ImGuiCol_SliderGrab]             = ImVec4(0.11f, 0.64f, 0.92f, 1.00f);
+    colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.08f, 0.50f, 0.72f, 1.00f);
+    colors[ImGuiCol_Button]                 = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+    colors[ImGuiCol_ButtonHovered]          = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
+    colors[ImGuiCol_ButtonActive]           = ImVec4(0.67f, 0.67f, 0.67f, 0.39f);
+    colors[ImGuiCol_Header]                 = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
+    colors[ImGuiCol_HeaderHovered]          = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+    colors[ImGuiCol_HeaderActive]           = ImVec4(0.67f, 0.67f, 0.67f, 0.39f);
+    colors[ImGuiCol_Separator]              = ImVec4(0.28f, 0.28f, 0.28f, 0.29f);
+    colors[ImGuiCol_SeparatorHovered]       = ImVec4(0.44f, 0.44f, 0.44f, 0.29f);
+    colors[ImGuiCol_SeparatorActive]        = ImVec4(0.40f, 0.44f, 0.47f, 1.00f);
+    colors[ImGuiCol_ResizeGrip]             = ImVec4(0.28f, 0.28f, 0.28f, 0.29f);
+    colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.44f, 0.44f, 0.44f, 0.29f);
+    colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.40f, 0.44f, 0.47f, 1.00f);
+    colors[ImGuiCol_Tab]                    = ImVec4(0.00f, 0.00f, 0.00f, 0.52f);
+    colors[ImGuiCol_TabHovered]             = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+    colors[ImGuiCol_TabActive]              = ImVec4(0.20f, 0.20f, 0.20f, 0.36f);
+    colors[ImGuiCol_TabUnfocused]           = ImVec4(0.00f, 0.00f, 0.00f, 0.52f);
+    colors[ImGuiCol_TabUnfocusedActive]     = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+    colors[ImGuiCol_PlotLines]              = ImVec4(0.11f, 0.64f, 0.92f, 1.00f);
+    colors[ImGuiCol_PlotLinesHovered]       = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+    colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+    colors[ImGuiCol_PlotHistogramHovered]   = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+    colors[ImGuiCol_TableHeaderBg]          = ImVec4(0.00f, 0.00f, 0.00f, 0.52f);
+    colors[ImGuiCol_TableBorderStrong]      = ImVec4(0.00f, 0.00f, 0.00f, 0.52f);
+    colors[ImGuiCol_TableBorderLight]       = ImVec4(0.28f, 0.28f, 0.28f, 0.29f);
+    colors[ImGuiCol_TableRowBg]             = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+    colors[ImGuiCol_TableRowBgAlt]          = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
+    colors[ImGuiCol_TextSelectedBg]         = ImVec4(0.20f, 0.22f, 0.23f, 1.00f);
+    colors[ImGuiCol_DragDropTarget]         = ImVec4(0.33f, 0.67f, 0.86f, 1.00f);
+    colors[ImGuiCol_NavHighlight]           = ImVec4(1.00f, 0.00f, 0.00f, 1.00f);
+    colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 0.00f, 0.00f, 0.70f);
+    colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(1.00f, 0.00f, 0.00f, 0.20f);
+    colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(1.00f, 0.00f, 0.00f, 0.35f);
+
+    // Enhanced styling parameters
+    style.WindowPadding                     = ImVec2(8.00f, 8.00f);
+    style.FramePadding                      = ImVec2(5.00f, 2.00f);
+    style.CellPadding                       = ImVec2(6.00f, 6.00f);
+    style.ItemSpacing                       = ImVec2(6.00f, 6.00f);
+    style.ItemInnerSpacing                  = ImVec2(6.00f, 6.00f);
+    style.TouchExtraPadding                 = ImVec2(0.00f, 0.00f);
+    style.IndentSpacing                     = 25;
+    style.ScrollbarSize                     = 15;
+    style.GrabMinSize                       = 10;
+    style.WindowBorderSize                  = 1;
+    style.ChildBorderSize                   = 1;
+    style.PopupBorderSize                   = 1;
+    style.FrameBorderSize                   = 1;
+    style.TabBorderSize                     = 1;
+    style.WindowRounding                    = 7;
+    style.ChildRounding                     = 4;
+    style.FrameRounding                     = 3;
+    style.PopupRounding                     = 4;
+    style.ScrollbarRounding                 = 9;
+    style.GrabRounding                      = 3;
+    style.LogSliderDeadzone                 = 4;
+    style.TabRounding                       = 4;
+}
+
 // Main code
 int main(int, char **)
 {
@@ -660,7 +921,7 @@ int main(int, char **)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window *window = SDL_CreateWindow("Linux System Monitor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    SDL_Window *window = SDL_CreateWindow("Linux System Monitor - Enhanced Edition", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -695,16 +956,21 @@ int main(int, char **)
     // render bindings
     ImGuiIO &io = ImGui::GetIO();
 
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    // Enable configuration flags
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+    // Load custom font if available (optional)
+    // io.Fonts->AddFontFromFileTTF("fonts/Roboto-Medium.ttf", 16.0f);
+
+    // Setup enhanced Dear ImGui style
+    setupEnhancedStyle();
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // background color
-    // note : you are free to change the style of the application
-    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+    // Enhanced background color - Dark gradient-like background
+    ImVec4 clear_color = ImVec4(0.08f, 0.08f, 0.10f, 1.00f);
 
     // Main loop
     bool done = false;
@@ -732,15 +998,15 @@ int main(int, char **)
 
         {
             ImVec2 mainDisplay = io.DisplaySize;
-            memoryProcessesWindow("== Memory and Processes ==",
+            memoryProcessesWindow("[ Memory & Processes ]",
                                   ImVec2((mainDisplay.x / 2) - 20, (mainDisplay.y / 2) + 30),
                                   ImVec2((mainDisplay.x / 2) + 10, 10));
             // --------------------------------------
-            systemWindow("== System ==",
+            systemWindow("[ System Monitor ]",
                          ImVec2((mainDisplay.x / 2) - 10, (mainDisplay.y / 2) + 30),
                          ImVec2(10, 10));
             // --------------------------------------
-            networkWindow("== Network ==",
+            networkWindow("[ Network Activity ]",
                           ImVec2(mainDisplay.x - 20, (mainDisplay.y / 2) - 60),
                           ImVec2(10, (mainDisplay.y / 2) + 50));
         }
