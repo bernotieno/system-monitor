@@ -11,6 +11,7 @@
 #include <iostream>
 #include <cmath>
 #include <chrono>
+#include <future>
 // lib to read from file
 #include <fstream>
 // for the name of the computer and the logged in user
@@ -37,6 +38,8 @@
 #include <sstream>
 #include <algorithm>
 #include <netdb.h>
+#include <thread>
+
 
 using namespace std;
 
@@ -163,5 +166,6 @@ vector<FanInfo> getFanInfo();
 void setupEnhancedStyle();
 void drawSectionHeader(const char* icon, const char* title, ImVec4 color);
 void drawInfoCard(const char* label, const char* value, ImVec4 labelColor);
+float GetCPUUsage(int pid);
 
 #endif
