@@ -107,59 +107,31 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
 
         ImGui::Spacing();
 
-        // Enhanced Process count display
-        ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), ">> Tasks Overview:");
-        ImGui::Separator();
-
-        // Create a grid layout for process counts
-        ImGui::Columns(3, "ProcessCounts", false);
-
-        // Total tasks
-        ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "Total:");
-        ImGui::SameLine();
-        ImGui::Text("%d", cachedTopStyleCounts["total"]);
-
-        ImGui::NextColumn();
-
-        // Running tasks
-        ImGui::TextColored(ImVec4(0.00f, 1.00f, 0.00f, 1.00f), "Running:");
-        ImGui::SameLine();
-        ImGui::Text("%d", cachedTopStyleCounts["running"]);
-
-        ImGui::NextColumn();
-
-        // Sleeping tasks
-        ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), "Sleeping:");
-        ImGui::SameLine();
-        ImGui::Text("%d", cachedTopStyleCounts["sleeping"]);
-
-        ImGui::NextColumn();
-
-        // Stopped tasks
-        ImGui::TextColored(ImVec4(1.00f, 0.60f, 0.00f, 1.00f), "Stopped:");
-        ImGui::SameLine();
-        ImGui::Text("%d", cachedTopStyleCounts["stopped"]);
-
-        ImGui::NextColumn();
-
-        // Zombie tasks
-        ImGui::TextColored(ImVec4(1.00f, 0.00f, 0.00f, 1.00f), "Zombie:");
-        ImGui::SameLine();
-        ImGui::Text("%d", cachedTopStyleCounts["zombie"]);
-
-        ImGui::Columns(1);
-
-        // Detailed breakdown (for debugging/additional info)
-        if (ImGui::CollapsingHeader("Detailed Process States")) {
+        // Task Overview - detailed process states
+        if (ImGui::CollapsingHeader(">> Task Overview")) {
             ImGui::Indent();
-            ImGui::Text("Running (R): %d", cachedProcessStates['R']);
-            ImGui::Text("Sleeping (S): %d", cachedProcessStates['S']);
-            ImGui::Text("Idle (I): %d", cachedProcessStates['I']);
-            ImGui::Text("Disk Sleep (D): %d", cachedProcessStates['D']);
-            ImGui::Text("Zombie (Z): %d", cachedProcessStates['Z']);
-            ImGui::Text("Stopped (T): %d", cachedProcessStates['T']);
-            ImGui::Text("Tracing stop (t): %d", cachedProcessStates['t']);
-            ImGui::Text("Dead (X): %d", cachedProcessStates['X']);
+
+            // Display the same statistics as Tasks Overview but in detailed format
+            ImGui::TextColored(ImVec4(0.11f, 0.64f, 0.92f, 1.00f), "Total Tasks:");
+            ImGui::SameLine(120);
+            ImGui::Text("%d", cachedTopStyleCounts["total"]);
+
+            ImGui::TextColored(ImVec4(0.00f, 1.00f, 0.00f, 1.00f), "Running:");
+            ImGui::SameLine(120);
+            ImGui::Text("%d", cachedTopStyleCounts["running"]);
+
+            ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), "Sleeping:");
+            ImGui::SameLine(120);
+            ImGui::Text("%d", cachedTopStyleCounts["sleeping"]);
+
+            ImGui::TextColored(ImVec4(1.00f, 0.60f, 0.00f, 1.00f), "Stopped:");
+            ImGui::SameLine(120);
+            ImGui::Text("%d", cachedTopStyleCounts["stopped"]);
+
+            ImGui::TextColored(ImVec4(1.00f, 0.00f, 0.00f, 1.00f), "Zombie:");
+            ImGui::SameLine(120);
+            ImGui::Text("%d", cachedTopStyleCounts["zombie"]);
+
             ImGui::Unindent();
         }
     }
