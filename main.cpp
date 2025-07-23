@@ -146,23 +146,26 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
             static float yScale = 100.0f;
             static double cachedCPU = 0.0;
             static float lastCPUUpdate = 0;
+            static float lastGraphUpdate = 0;
 
             float currentTime = ImGui::GetTime();
 
-            // Update CPU data every 3 seconds (matches top's default refresh rate)
-            if (currentTime - lastCPUUpdate > 3.0f) {
+            // Update CPU data every 1 second for responsive monitoring
+            if (currentTime - lastCPUUpdate > 1.0f) {
                 cachedCPU = getCPUUsage();
                 lastCPUUpdate = currentTime;
             }
 
-            // Only update if animation is enabled
-            if (animate) {
+            // Update graph based on FPS setting (only if animation is enabled)
+            float updateInterval = 1.0f / fps; // Convert FPS to update interval
+            if (animate && (currentTime - lastGraphUpdate > updateInterval)) {
                 cpuHistory.push_back((float)cachedCPU);
 
                 // Keep only last 100 values
                 if (cpuHistory.size() > 100) {
                     cpuHistory.erase(cpuHistory.begin());
                 }
+                lastGraphUpdate = currentTime;
             }
 
             // Enhanced CPU usage display
@@ -219,11 +222,12 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
             static float yScale = 100.0f;
             static vector<ThermalInfo> cachedThermalInfo;
             static float lastThermalUpdate = 0;
+            static float lastGraphUpdate = 0;
 
             float currentTime = ImGui::GetTime();
 
-            // Update thermal data every 3 seconds (matches top's default interval)
-            if (currentTime - lastThermalUpdate > 3.0f) {
+            // Update thermal data every 1 second for responsive monitoring
+            if (currentTime - lastThermalUpdate > 1.0f) {
                 cachedThermalInfo = getThermalInfo();
                 lastThermalUpdate = currentTime;
             }
@@ -233,8 +237,9 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
                 thermalHistory.resize(cachedThermalInfo.size());
             }
 
-            // Only update if animation is enabled
-            if (animate) {
+            // Update graph based on FPS setting (only if animation is enabled)
+            float updateInterval = 1.0f / fps; // Convert FPS to update interval
+            if (animate && (currentTime - lastGraphUpdate > updateInterval)) {
                 // Update thermal history
                 for (size_t i = 0; i < cachedThermalInfo.size(); i++) {
                     thermalHistory[i].push_back((float)cachedThermalInfo[i].temperature);
@@ -244,6 +249,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
                         thermalHistory[i].erase(thermalHistory[i].begin());
                     }
                 }
+                lastGraphUpdate = currentTime;
             }
 
             ImGui::Checkbox("Animate", &animate);
@@ -317,11 +323,12 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
             static float yScale = 5000.0f; // Higher scale for RPM
             static vector<FanInfo> cachedFanInfo;
             static float lastFanUpdate = 0;
+            static float lastGraphUpdate = 0;
 
             float currentTime = ImGui::GetTime();
 
-            // Update fan data every 3 seconds (matches top's default interval)
-            if (currentTime - lastFanUpdate > 3.0f) {
+            // Update fan data every 1 second for responsive monitoring
+            if (currentTime - lastFanUpdate > 1.0f) {
                 cachedFanInfo = getFanInfo();
                 lastFanUpdate = currentTime;
             }
@@ -331,8 +338,9 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
                 fanHistory.resize(cachedFanInfo.size());
             }
 
-            // Only update if animation is enabled
-            if (animate) {
+            // Update graph based on FPS setting (only if animation is enabled)
+            float updateInterval = 1.0f / fps; // Convert FPS to update interval
+            if (animate && (currentTime - lastGraphUpdate > updateInterval)) {
                 // Update fan history
                 for (size_t i = 0; i < cachedFanInfo.size(); i++) {
                     fanHistory[i].push_back((float)cachedFanInfo[i].speed);
@@ -342,6 +350,7 @@ void systemWindow(const char *id, ImVec2 size, ImVec2 position)
                         fanHistory[i].erase(fanHistory[i].begin());
                     }
                 }
+                lastGraphUpdate = currentTime;
             }
 
             ImGui::Checkbox("Animate", &animate);
@@ -612,8 +621,8 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
     static float lastUpdate = 0;
     float currentTime = ImGui::GetTime();
 
-    // Update network data every 3 seconds (matches top's default interval)
-    if (currentTime - lastUpdate > 3.0f) {
+    // Update network data every 1 second for responsive monitoring
+    if (currentTime - lastUpdate > 1.0f) {
         interfaces = getNetworkInterfaces();
         lastUpdate = currentTime;
     }
@@ -666,13 +675,30 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
         // RX (Receive) Tab
         if (ImGui::BeginTabItem("RX (Receive)")) {
             static map<string, vector<float>> rxHistory;
+            static bool animate = true;
+            static float fps = 60.0f;
+            static float lastGraphUpdate = 0;
+
+            // Control panel
+            ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), "Controls:");
+            ImGui::Separator();
+            ImGui::Checkbox("Animate", &animate);
+            ImGui::SameLine();
+            ImGui::SliderFloat("FPS", &fps, 1.0f, 120.0f);
+            ImGui::Spacing();
+
+            // Update graph based on FPS setting (only if animation is enabled)
+            float updateInterval = 1.0f / fps; // Convert FPS to update interval
+            bool shouldUpdate = animate && (currentTime - lastGraphUpdate > updateInterval);
 
             for (const auto& iface : interfaces) {
                 if (ImGui::CollapsingHeader(iface.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-                    // Update RX history
-                    rxHistory[iface.name].push_back((float)iface.rx.bytes);
-                    if (rxHistory[iface.name].size() > 100) {
-                        rxHistory[iface.name].erase(rxHistory[iface.name].begin());
+                    // Update RX history based on FPS
+                    if (shouldUpdate) {
+                        rxHistory[iface.name].push_back((float)iface.rx.bytes);
+                        if (rxHistory[iface.name].size() > 100) {
+                            rxHistory[iface.name].erase(rxHistory[iface.name].begin());
+                        }
                     }
 
                     // RX Table
@@ -721,19 +747,42 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
                     }
                 }
             }
+
+            // Update the graph update timer
+            if (shouldUpdate) {
+                lastGraphUpdate = currentTime;
+            }
+
             ImGui::EndTabItem();
         }
 
         // TX (Transmit) Tab
         if (ImGui::BeginTabItem("TX (Transmit)")) {
             static map<string, vector<float>> txHistory;
+            static bool animate = true;
+            static float fps = 60.0f;
+            static float lastGraphUpdate = 0;
+
+            // Control panel
+            ImGui::TextColored(ImVec4(0.90f, 0.70f, 0.00f, 1.00f), "Controls:");
+            ImGui::Separator();
+            ImGui::Checkbox("Animate", &animate);
+            ImGui::SameLine();
+            ImGui::SliderFloat("FPS", &fps, 1.0f, 120.0f);
+            ImGui::Spacing();
+
+            // Update graph based on FPS setting (only if animation is enabled)
+            float updateInterval = 1.0f / fps; // Convert FPS to update interval
+            bool shouldUpdate = animate && (currentTime - lastGraphUpdate > updateInterval);
 
             for (const auto& iface : interfaces) {
                 if (ImGui::CollapsingHeader(iface.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-                    // Update TX history
-                    txHistory[iface.name].push_back((float)iface.tx.bytes);
-                    if (txHistory[iface.name].size() > 100) {
-                        txHistory[iface.name].erase(txHistory[iface.name].begin());
+                    // Update TX history based on FPS
+                    if (shouldUpdate) {
+                        txHistory[iface.name].push_back((float)iface.tx.bytes);
+                        if (txHistory[iface.name].size() > 100) {
+                            txHistory[iface.name].erase(txHistory[iface.name].begin());
+                        }
                     }
 
                     // TX Table
@@ -782,6 +831,12 @@ void networkWindow(const char *id, ImVec2 size, ImVec2 position)
                     }
                 }
             }
+
+            // Update the graph update timer
+            if (shouldUpdate) {
+                lastGraphUpdate = currentTime;
+            }
+
             ImGui::EndTabItem();
         }
 
