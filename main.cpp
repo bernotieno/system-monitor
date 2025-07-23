@@ -894,9 +894,9 @@ void setupEnhancedStyle()
     colors[ImGuiCol_Button]                 = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
     colors[ImGuiCol_ButtonHovered]          = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
     colors[ImGuiCol_ButtonActive]           = ImVec4(0.67f, 0.67f, 0.67f, 0.39f);
-    colors[ImGuiCol_Header]                 = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
-    colors[ImGuiCol_HeaderHovered]          = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
-    colors[ImGuiCol_HeaderActive]           = ImVec4(0.67f, 0.67f, 0.67f, 0.39f);
+    colors[ImGuiCol_Header]                 = ImVec4(0.11f, 0.64f, 0.92f, 0.80f);  // Bright blue selection - highly visible
+    colors[ImGuiCol_HeaderHovered]          = ImVec4(0.15f, 0.70f, 0.95f, 0.90f);  // Brighter blue on hover
+    colors[ImGuiCol_HeaderActive]           = ImVec4(0.08f, 0.50f, 0.72f, 1.00f);  // Darker blue when active/clicked
     colors[ImGuiCol_Separator]              = ImVec4(0.28f, 0.28f, 0.28f, 0.29f);
     colors[ImGuiCol_SeparatorHovered]       = ImVec4(0.44f, 0.44f, 0.44f, 0.29f);
     colors[ImGuiCol_SeparatorActive]        = ImVec4(0.40f, 0.44f, 0.47f, 1.00f);
